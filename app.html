@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Magol Ict Centre App</title>
+    <!-- PWA Meta Tags to make it feel like a real app -->
+    <meta name="theme-color" content="#0056b3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* App Reset & Base */
+        :root {
+            --primary: #0056b3;
+            --secondary: #00a8e8;
+            --bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --nav-height: 65px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            max-width: 480px; /* Simulate mobile screen on desktop */
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+        }
+        .app-header h1 { font-size: 1.2rem; font-weight: 600; }
+
+        /* Content Area */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: calc(var(--nav-height) + 20px);
+            scroll-behavior: smooth;
+        }
+
+        /* Screens */
+        .screen { display: none; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-light);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-item i { font-size: 1.3rem; }
+        .nav-item.active { color: var(--primary); }
+
+        /* UI Components */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .hero-banner h2 { font-size: 1.5rem; margin-bottom: 10px; }
+        .hero-banner p { font-size: 0.9rem; opacity: 0.9; }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .service-item {
+            background: white;
+            padding: 15px 10px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .service-item:active { transform: scale(0.95); }
+        .service-item i { font-size: 1.8rem; color: var(--primary); margin-bottom: 8px; }
+        .service-item span { display: block; font-size: 0.75rem; color: var(--text-light); font-weight: 500; }
+
+        /* Q&A Section */
+        .faq-item {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .faq-question {
+            padding: 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .faq-answer {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .faq-item.open .faq-answer {
+            padding: 0 15px 15px;
+            max-height: 200px;
+        }
+        .faq-item.open .faq-toggle { transform: rotate(180deg); }
+        .faq-toggle { transition: transform 0.3s; }
+
+        .chat-input-area {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .chat-input-area textarea {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: none;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+        .chat-input-area textarea:focus { outline: none; border-color: var(--primary); }
+        
+        .btn-whatsapp {
+            width: 100%;
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-whatsapp:active { opacity: 0.8; }
+
+        /* Contact Info */
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .contact-icon {
+            width: 45px;
+            height: 45px;
+            background: #e3f2fd;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .contact-text h4 { font-size: 0.9rem; color: var(--text-light); margin-bottom: 2px; }
+        .contact-text p { font-size: 1rem; font-weight: 500; }
+        .contact-text a { color: var(--primary); text-decoration: none; }
+
+        h3.section-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- App Header -->
+    <header class="app-header">
+        <i class="fas fa-laptop-code"></i>
+        <h1>Magol Ict Centre</h1>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-content">
+        
+        <!-- HOME SCREEN -->
+        <div id="home" class="screen active">
+            <div class="hero-banner">
+                <h2>Karibu Magol!</h2>
+                <p>Your trusted tech hub in Bungoma. Fast internet, printing, and expert online assistance.</p>
+            </div>
+
+            <h3 class="section-title">Our Services</h3>
+            <div class="service-grid">
+                <div class="service-item">
+                    <i class="fas fa-print"></i>
+                    <span>Printing</span>
+                </div>
+                <div class="service-item">
+                    <i class="fas fa-wifi"></i>
+                    <span>Wi-Fi</span>
+                </div>
+                <div class="service-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>eCitizen</span>
+                </div>
+                <div class="service-item">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Training</span>
+                </div>
+                <div class="service-item">
+                    <i class="fas fa-camera"></i>
+                    <span>Photos</span>
+                </div>
+                <div class="service-item">
+                    <i class="fas fa-tools"></i>
+                    <span>Repairs</span>
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center;">
+                <h3>Need Help?</h3>
+                <p style="margin: 10px 0; color: var(--text-light);">Have a question about our services or pricing?</p>
+                <button class="btn-whatsapp" onclick="switchScreen('ask', this)">
+                    <i class="fas fa-comments"></i> Ask a Question
+                </button>
+            </div>
+        </div>
+
+        <!-- SERVICES SCREEN -->
+        <div id="services" class="screen">
+            <h3 class="section-title">All Services & Pricing</h3>
+            
+            <div class="card">
+                <h4><i class="fas fa-print" style="color:var(--primary); margin-right:8px;"></i> Printing & Docs</h4>
+                <ul style="margin-top:10px; padding-left:20px; color:var(--text-light); line-height: 1.8;">
+                    <li>B&W Printing: <strong>Ksh 10/page</strong></li>
+                    <li>Color Printing: <strong>Ksh 50/page</strong></li>
+                    <li>Scanning & Emailing: <strong>Ksh 20/doc</strong></li>
+                    <li>Lamination: <strong>Ksh 50 - 100</strong></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h4><i class="fas fa-globe" style="color:var(--primary); margin-right:8px;"></i> Online Applications</h4>
+                <ul style="margin-top:10px; padding-left:20px; color:var(--text-light); line-height: 1.8;">
+                    <li>eCitizen Services: <strong>From Ksh 50</strong></li>
+                    <li>KRA PIN Registration: <strong>Ksh 100</strong></li>
+                    <li>Job/University Applications: <strong>From Ksh 200</strong></li>
+                    <li>Passport Photos: <strong>Ksh 100</strong></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h4><i class="fas fa-wifi" style="color:var(--primary); margin-right:8px;"></i> Internet & Training</h4>
+                <ul style="margin-top:10px; padding-left:20px; color:var(--text-light); line-height: 1.8;">
+                    <li>Internet Browsing: <strong>Ksh 50/hour</strong></li>
+                    <li>Computer Packages: <strong>Call for rates</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ASK / Q&A SCREEN -->
+        <div id="ask" class="screen">
+            <h3 class="section-title">Frequently Asked Questions</h3>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    Do you help with eCitizen accounts?
+                    <i class="fas fa-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes! We help with all eCitizen services, including Good Conduct certificates, NTSA services, birth certificate applications, and passport applications.
+                </div>
+            </div>
+
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    How much is printing per page?
+                    <i class="fas fa-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-answer">
+                    Black and white printing is Ksh 10 per page. Color printing is Ksh 50 per page. We offer discounts for bulk printing (over 50 pages).
+                </div>
+            </div>
+
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    Do you offer computer training?
+                    <i class="fas fa-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes, we offer comprehensive computer packages including Microsoft Word, Excel, PowerPoint, and basic internet skills. Contact us for the current fee structure and duration.
+                </div>
+            </div>
+
+            <h3 class="section-title" style="margin-top: 25px;">Still have a question?</h3>
+            <div class="chat-input-area">
+                <textarea id="userQuestion" placeholder="Type your question here... (e.g., How much for a passport photo?)"></textarea>
+                <button class="btn-whatsapp" onclick="askViaWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> Send via WhatsApp
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTACT SCREEN -->
+        <div id="contact" class="screen">
+            <h3 class="section-title">Visit Us in Bungoma</h3>
+            
+            <div class="card">
+                <div class="contact-row">
+                    <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="contact-text">
+                        <h4>Location</h4>
+                        <p>Bungoma Town, Kenya</p>
+                    </div>
+                </div>
+                <div class="contact-row">
+                    <div class="contact-icon"><i class="fas fa-phone"></i></div>
+                    <div class="contact-text">
+                        <h4>Call Us</h4>
+                        <p><a href="tel:+254707858235">+254 707 858 235</a></p>
+                    </div>
+                </div>
+                <div class="contact-row">
+                    <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="contact-text">
+                        <h4>Email</h4>
+                        <p><a href="mailto:magolictcentre@gmail.com">magolictcentre@gmail.com</a></p>
+                    </div>
+                </div>
+                <div class="contact-row">
+                    <div class="contact-icon"><i class="fas fa-clock"></i></div>
+                    <div class="contact-text">
+                        <h4>Working Hours</h4>
+                        <p>Mon-Fri: 8AM-8PM | Sat: 9AM-6PM</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-whatsapp" onclick="window.open('https://wa.me/254707858235', '_blank')">
+                <i class="fab fa-whatsapp"></i> Chat on WhatsApp Now
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchScreen('home', this)">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('services', this)">
+            <i class="fas fa-th-large"></i>
+            <span>Services</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('ask', this)">
+            <i class="fas fa-comments"></i>
+            <span>Ask</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen('contact', this)">
+            <i class="fas fa-user"></i>
+            <span>Contact</span>
+        </div>
+    </nav>
+
+    <script>
+        // Screen Navigation
+        function switchScreen(screenId, element) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            // Show selected screen
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update bottom nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if(element) element.classList.add('active');
+
+            // Scroll to top
+            document.querySelector('.app-content').scrollTop = 0;
+        }
+
+        // FAQ Toggle
+        function toggleFaq(element) {
+            element.classList.toggle('open');
+        }
+
+        // WhatsApp Integration
+        function askViaWhatsApp() {
+            const question = document.getElementById('userQuestion').value.trim();
+            if (!question) {
+                alert("Please type your question first!");
+                return;
+            }
+            
+            const phoneNumber = "254707858235";
+            const message = `Hello Magol Ict Centre! I am using your App and I have a question:\n\n"${question}"`;
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
